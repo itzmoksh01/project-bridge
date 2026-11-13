@@ -2,6 +2,14 @@
 
 All notable changes to Project Bridge are documented here.
 
+## [0.3.1] - 2026-11-13
+
+### Improved
+- Corrected the checkpoint-tag explanation: a tag records a commit reference; it does not back up uncommitted files or perform an automatic rollback.
+- Clarified OpenCode Plan-agent behavior and separated edit permissions from shell-command permissions.
+- Added maintainer support guidance, a structured feature-request form, and a repeatable release checklist.
+- Added a live GitHub Actions status badge to the README and extended package validation to require the new community/release files.
+
 ## [0.3.0] - 2026-11-13
 
 ### Added
