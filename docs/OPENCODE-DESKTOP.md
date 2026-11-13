@@ -33,13 +33,15 @@ Then copy `templates/AGENTS.md` and `templates/AI_SWITCH_LOG.md` into the projec
 ## 5. Pick a model and a mode
 
 - Click the model name near the message box and choose a model.
-- Start in the **Plan** agent. It is read-only and asks before running shell commands. Switch agents with the selector or the Tab key.
+- Start in the **Plan** agent for the initial audit. With OpenCode’s shipped defaults, Plan denies file edits except within its plan-file area; shell-command permissions are controlled separately by the active configuration and may allow, ask, or deny a command. Do not treat Plan as a complete security sandbox. Review the active permissions before starting. See the [OpenCode permissions documentation](https://opencode.ai/docs/permissions/). Switch agents with the selector or the Tab key.
 - Paste [`prompts/01-onboard-readonly.md`](../prompts/01-onboard-readonly.md).
 - After you have read its report, switch to **Build** and use [`prompts/02-one-task.md`](../prompts/02-one-task.md) for each task.
 
 If a model gets stuck or rate-limited, pick another model in the same session and repeat the prompt. The state lives in your files, not in the model.
 
 ## 6. Permission pop-ups
+
+Permission behavior is configurable and can differ between OpenCode versions, agents, and project/global settings. A Plan agent denying edits does **not** mean every shell command will trigger an approval prompt. Check the active rules and inspect each requested command before approving it.
 
 | Allow | Deny |
 | --- | --- |
