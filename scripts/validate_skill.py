@@ -29,6 +29,8 @@ def main() -> int:
         ROOT / "prompts" / "03-handoff-entry.md", ROOT / "prompts" / "04-review-and-merge.md",
         ROOT / "scripts" / "preflight.sh", ROOT / "scripts" / "review.sh", ROOT / "scripts" / "test_scripts.sh",
         ROOT / "docs" / "OPENCODE-DESKTOP.md", ROOT / "docs" / "GUIDE-HINGLISH.md",
+        ROOT / "docs" / "RELEASE-CHECKLIST.md", ROOT / "SUPPORT.md",
+        ROOT / ".github" / "ISSUE_TEMPLATE" / "feature_request.yml",
     ]
     for path in required:
         if not path.is_file():
@@ -108,7 +110,10 @@ def main() -> int:
     # GitHub issue forms need name, description and body (not 'about').
     form = (ROOT / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml").read_text(encoding="utf-8")
     if not re.search(r"(?m)^description:", form) or re.search(r"(?m)^about:", form):
-        fail("Issue form must use 'description:' (not 'about:').")
+        fail("Bug report issue form must use 'description:' (not 'about:').")
+    feature_form = (ROOT / ".github" / "ISSUE_TEMPLATE" / "feature_request.yml").read_text(encoding="utf-8")
+    if not re.search(r"(?m)^description:", feature_form) or re.search(r"(?m)^about:", feature_form):
+        fail("Feature request issue form must use 'description:' (not 'about:').")
 
     # Shell scripts need a bash shebang and no Windows line endings.
     for script in (ROOT / "scripts").glob("*.sh"):
@@ -122,6 +127,7 @@ def main() -> int:
     print(f"PASS: skill ID matches package folder ({skill_name})")
     print(f"PASS: skill description length is {len(description)} characters")
     print("PASS: required workflows and opt-in receipt guidance are present")
+    print("PASS: support and release-readiness files are present")
     print("PASS: receipt schema and example are valid JSON with required top-level fields")
     print(f"PASS: files referenced by SKILL.md exist ({len(mentioned)} checked)")
     print(f"PASS: version is consistent ({versions['SKILL.md']})")
