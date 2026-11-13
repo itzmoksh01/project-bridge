@@ -1,0 +1,33 @@
+name: Bug report
+about: Report a reproducible problem with the skill or its documentation
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, private source code, customer data, or unredacted logs.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Coding agent and version
+      placeholder: e.g. OpenCode Desktop x.y.z
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Safe reproduction steps
+      description: Use a minimal example with all private details removed.
+    validations:
+      required: true

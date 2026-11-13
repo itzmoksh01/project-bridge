@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Project Bridge Portable Handoff Receipt",
+  "description": "Optional, secret-free summary of a software-project handoff. This receipt is context, not proof of workspace state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "created_at",
+    "project",
+    "workspace",
+    "intent",
+    "git",
+    "progress",
+    "verification",
+    "risks",
+    "next_action"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository_visibility": {
+          "enum": [
+            "public",
+            "private",
+            "local_only",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationship",
+        "previous_writer_stopped"
+      ],
+      "properties": {
+        "relationship": {
+          "enum": [
+            "same_working_tree",
+            "different_clone",
+            "separate_worktree",
+            "different_machine",
+            "remote_workspace",
+            "unknown"
+          ]
+        },
+        "previous_writer_stopped": {
+          "enum": [
+            "yes",
+            "no",
+            "unknown"
+          ]
+        },
+        "source_agent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_agent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current_goal",
+        "constraints",
+        "out_of_scope"
+      ],
+      "properties": {
+        "current_goal": {
+          "type": "string"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch",
+        "head_commit",
+        "working_tree",
+        "staged_files",
+        "modified_files",
+        "untracked_files",
+        "remote_status"
+      ],
+      "properties": {
+        "branch": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "head_commit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^([0-9a-fA-F]{7,40})?$"
+        },
+        "working_tree": {
+          "enum": [
+            "clean",
+            "staged",
+            "modified",
+            "untracked",
+            "mixed",
+            "unknown"
+          ]
+        },
+        "staged_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "untracked_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "remote_status": {
+          "enum": [
+            "synced",
+            "ahead",
+            "behind",
+            "diverged",
+            "no_remote",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completed",
+        "in_progress",
+        "blockers"
+      ],
+      "properties": {
+        "completed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "in_progress": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checks_run",
+        "checks_not_run"
+      ],
+      "properties": {
+        "checks_run": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "result"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "result": {
+                "enum": [
+                  "passed",
+                  "failed",
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "notes": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "checks_not_run": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "integrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "purpose",
+          "configuration_status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "configuration_status": {
+            "enum": [
+              "verified",
+              "not_verified",
+              "unknown"
+            ]
+          }
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "redactions_or_unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

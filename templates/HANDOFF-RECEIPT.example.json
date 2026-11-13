@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-11-13T13:00:00+05:30",
+  "project": {
+    "name": "Example Web App",
+    "repository_visibility": "unknown"
+  },
+  "workspace": {
+    "relationship": "same_working_tree",
+    "previous_writer_stopped": "yes",
+    "source_agent": "Claude Code",
+    "target_agent": "OpenCode"
+  },
+  "intent": {
+    "current_goal": "Finish the approved accessibility fix.",
+    "constraints": [
+      "Preserve the current application architecture.",
+      "Do not change authentication or database schema."
+    ],
+    "out_of_scope": [
+      "Dependency upgrades",
+      "Deployment"
+    ]
+  },
+  "git": {
+    "branch": "feature/accessibility",
+    "head_commit": "0123456789abcdef0123456789abcdef01234567",
+    "working_tree": "modified",
+    "staged_files": [],
+    "modified_files": [
+      "src/components/Navigation.tsx"
+    ],
+    "untracked_files": [],
+    "remote_status": "unknown"
+  },
+  "progress": {
+    "completed": [
+      "Audited the navigation component."
+    ],
+    "in_progress": [
+      "Implement the approved keyboard-focus adjustment."
+    ],
+    "blockers": []
+  },
+  "verification": {
+    "checks_run": [
+      {
+        "name": "Static review of the changed component",
+        "result": "passed",
+        "notes": "No runtime test was performed."
+      }
+    ],
+    "checks_not_run": [
+      "End-to-end browser tests"
+    ]
+  },
+  "integrations": [
+    {
+      "name": "Analytics provider",
+      "purpose": "Usage analytics",
+      "configuration_status": "unknown"
+    }
+  ],
+  "risks": [
+    "Keyboard behavior still requires a browser test."
+  ],
+  "next_action": "Review the proposed minimal diff with the user before making further changes.",
+  "redactions_or_unknowns": [
+    "No absolute local path or credential values are included."
+  ]
+}
