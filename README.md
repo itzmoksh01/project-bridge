@@ -11,7 +11,8 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-16a34a?style=for-the-badge" /></a>
-  <img alt="Version 0.3.0" src="https://img.shields.io/badge/version-0.3.0-7c3aed?style=for-the-badge" />
+  <a href="https://github.com/itzmoksh01/project-bridge/actions/workflows/validate.yml"><img alt="CI validation" src="https://github.com/itzmoksh01/project-bridge/actions/workflows/validate.yml/badge.svg?branch=main" /></a>
+  <img alt="Version 0.3.0" src="https://img.shields.io/badge/version-0.3.1-7c3aed?style=for-the-badge" />
   <img alt="Agent Skills format" src="https://img.shields.io/badge/format-Agent%20Skills-6366f1?style=for-the-badge" />
   <img alt="Claude Code target" src="https://img.shields.io/badge/target-Claude%20Code-d97706?style=for-the-badge" />
   <img alt="OpenCode target" src="https://img.shields.io/badge/target-OpenCode-0f172a?style=for-the-badge" />
@@ -24,7 +25,8 @@
   <a href="#limit-safe-mode">Limit-safe mode</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#the-optional-handoff-receipt">Handoff receipt</a> ·
-  <a href="#contribute">Contribute</a>
+  <a href="#contribute">Contribute</a> ·
+  <a href="#support">Support</a>
 </p>
 
 ---
@@ -83,7 +85,7 @@ flowchart LR
 
 | Piece | What it is | Why it matters |
 | --- | --- | --- |
-| **Checkpoint tag** | `checkpoint-before-<tool>-<date>` | One command returns you to the exact pre-switch state |
+| **Checkpoint tag** | `checkpoint-before-<tool>-<date>` | Records the pre-switch commit as a reference point; it does not back up uncommitted files or automatically roll back later work |
 | **Handoff branch** | `<tool>-work`, for example `opencode-work` | The backup agent never touches your base branch |
 | **Shared rulebook** | [`templates/AGENTS.md`](templates/AGENTS.md) | Locks every agent reads: no secrets, no installs, no live actions, no force git |
 | **Handoff log** | [`templates/AI_SWITCH_LOG.md`](templates/AI_SWITCH_LOG.md) | The next agent learns what was done, tested and left pending |
@@ -108,7 +110,7 @@ Copy-paste prompts for each step:
 | End of session | [`prompts/03-handoff-entry.md`](prompts/03-handoff-entry.md) |
 | Main agent reviews and merges | [`prompts/04-review-and-merge.md`](prompts/04-review-and-merge.md) |
 
-More: [OpenCode Desktop setup](docs/OPENCODE-DESKTOP.md) · [Hinglish step-by-step guide](docs/GUIDE-HINGLISH.md)
+More: [OpenCode Desktop setup](docs/OPENCODE-DESKTOP.md) · [Hinglish step-by-step guide](docs/GUIDE-HINGLISH.md) · [Release checklist](docs/RELEASE-CHECKLIST.md)
 
 ## Quick start
 
@@ -260,6 +262,16 @@ Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request. Do not 
 ## Security
 
 Do not post exposed credentials or sensitive vulnerability details in public issues. See [`SECURITY.md`](SECURITY.md) for responsible reporting guidance. If a real credential is committed, rotate/revoke it immediately; deleting it from the latest commit does not erase it from Git history.
+
+## Support
+
+Need help, found a reproducible problem, or want to suggest an improvement?
+
+- Read [SUPPORT.md](SUPPORT.md) for the right support channel and the information to include.
+- Use the [bug report](https://github.com/itzmoksh01/project-bridge/issues/new?template=bug_report.yml) or [feature request](https://github.com/itzmoksh01/project-bridge/issues/new?template=feature_request.yml) form.
+- For suspected vulnerabilities, follow [SECURITY.md](SECURITY.md) instead of opening a public issue.
+
+Please redact secrets, personal data, private source code, and customer information from every report.
 
 ## License
 

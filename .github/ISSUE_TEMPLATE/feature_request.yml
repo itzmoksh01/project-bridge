@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a focused improvement to Project Bridge
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please describe a user problem, not only a preferred implementation. Do not include credentials, private source code, customer data, or unredacted logs.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem should this solve?
+      description: Who is affected, and what is difficult or unsafe today?
+      placeholder: Describe the real-world problem.
+    validations:
+      required: true
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Concrete use case
+      description: Describe the workflow and the expected outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested approach
+      description: An idea is welcome, but implementation details are optional.
+    validations:
+      required: false
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Affected coding agents and environments
+      description: Include exact versions and operating systems when known.
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

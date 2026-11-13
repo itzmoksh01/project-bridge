@@ -5,7 +5,7 @@ license: MIT
 compatibility: Agent Skills format. Initial documented targets are Claude Code and OpenCode; follow each host's current discovery paths and permissions.
 metadata:
   author: Project Bridge contributors
-  version: "0.3.0"
+  version: "0.3.1"
   opencode/slash: "true"
 ---
 
