@@ -70,3 +70,15 @@ Run this plan first in Claude Code and OpenCode. Do not add other agents to the 
 - [ ] The receipt contains no secrets, absolute local paths, private repository URLs, customer data, or unnecessary proprietary information.
 - [ ] The saved JSON parses and conforms to `templates/HANDOFF-RECEIPT.schema.json` using a real JSON Schema validator.
 - [ ] The receiving agent checks the receipt against the live repository and reports discrepancies.
+
+## Limit-safe mode tests (Workflows F and G)
+
+- [ ] `bash scripts/test_scripts.sh` passes on the tested OS (Linux, macOS, or Git Bash on Windows).
+- [ ] In a disposable repository, the agent previews with `preflight.sh --dry-run` and asks for approval before the real run.
+- [ ] After the real run, a `checkpoint-before-<tool>-<date>` tag and a `<tool>-work` branch exist and no files changed.
+- [ ] A dirty working tree, a tracked `.env`, and an existing handoff branch each make preflight stop without changing anything.
+- [ ] The agent asks before creating `AGENTS.md` and `AI_SWITCH_LOG.md`, never edits an existing `CLAUDE.md`, and merges instead of overwriting an existing `AGENTS.md`.
+- [ ] A backup agent (OpenCode) reads `AGENTS.md`, stays on the handoff branch, works one task at a time, and appends a log entry on "handoff".
+- [ ] `review.sh` lists the backup agent's commits, flags sensitive files, and never prints secret-like values.
+- [ ] The returning agent does not merge or push until the user explicitly approves.
+- [ ] OpenCode loads the skill through its `skill` tool when asked to use `project-bridge`. Record whether `opencode/slash` exposes a slash command in your version.

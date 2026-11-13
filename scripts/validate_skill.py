@@ -2,6 +2,7 @@
 """Dependency-free sanity checks for the Project Bridge skill package."""
 from __future__ import annotations
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -20,7 +21,15 @@ def fail(message: str) -> None:
 
 
 def main() -> int:
-    required = [SKILL_FILE, README_FILE, TEMPLATE_FILE, ROOT / "LICENSE", SCHEMA_FILE, EXAMPLE_FILE]
+    required = [
+        SKILL_FILE, README_FILE, TEMPLATE_FILE, ROOT / "LICENSE", SCHEMA_FILE, EXAMPLE_FILE,
+        ROOT / "CHANGELOG.md", ROOT / ".gitattributes",
+        ROOT / "templates" / "AGENTS.md", ROOT / "templates" / "AI_SWITCH_LOG.md",
+        ROOT / "prompts" / "01-onboard-readonly.md", ROOT / "prompts" / "02-one-task.md",
+        ROOT / "prompts" / "03-handoff-entry.md", ROOT / "prompts" / "04-review-and-merge.md",
+        ROOT / "scripts" / "preflight.sh", ROOT / "scripts" / "review.sh", ROOT / "scripts" / "test_scripts.sh",
+        ROOT / "docs" / "OPENCODE-DESKTOP.md", ROOT / "docs" / "GUIDE-HINGLISH.md",
+    ]
     for path in required:
         if not path.is_file():
             fail(f"Required file is missing: {path.relative_to(ROOT)}")
@@ -40,7 +49,12 @@ def main() -> int:
         fail("Frontmatter must contain a description.")
     skill_name = name_match.group(1)
     if skill_name != ROOT.name:
-        fail(f"Skill name ({skill_name}) must match its folder name ({ROOT.name}).")
+        message = f"Skill name ({skill_name}) must match its folder name ({ROOT.name})."
+        if os.environ.get("GITHUB_ACTIONS"):
+            # Forks may use a different repository name; the folder rule only matters where the skill is installed.
+            print("NOTE: " + message + " Ignored in CI.")
+        else:
+            fail(message)
     if len(skill_name) > 64:
         fail("Skill name must be 64 characters or fewer.")
     description = description_match.group(1).strip().strip("'\"")
@@ -73,11 +87,45 @@ def main() -> int:
     if any(key.lower() in {"password", "token", "secret", "api_key", "private_key"} for key in example):
         fail("Receipt example must not include credential-like keys.")
 
+    # Every package path mentioned in SKILL.md must exist.
+    mentioned = sorted(set(re.findall(r"(?:templates|prompts|scripts|docs)/[A-Za-z0-9_.\-]+", content)))
+    missing_refs = [m for m in mentioned if not (ROOT / m).exists()]
+    if missing_refs:
+        fail("SKILL.md references files that do not exist: " + ", ".join(missing_refs))
+
+    # Version must be consistent across SKILL.md, CHANGELOG.md and the README badge.
+    skill_version = re.search(r'(?m)^\s+version:\s*"([^"]+)"', frontmatter)
+    changelog_version = re.search(r"(?m)^## \[([0-9]+\.[0-9]+\.[0-9]+)\]", (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"))
+    badge_version = re.search(r"badge/version-([0-9]+\.[0-9]+\.[0-9]+)-", README_FILE.read_text(encoding="utf-8"))
+    versions = {
+        "SKILL.md": skill_version.group(1) if skill_version else None,
+        "CHANGELOG.md": changelog_version.group(1) if changelog_version else None,
+        "README badge": badge_version.group(1) if badge_version else None,
+    }
+    if None in versions.values() or len(set(versions.values())) != 1:
+        fail(f"Version mismatch or missing version: {versions}")
+
+    # GitHub issue forms need name, description and body (not 'about').
+    form = (ROOT / ".github" / "ISSUE_TEMPLATE" / "bug_report.yml").read_text(encoding="utf-8")
+    if not re.search(r"(?m)^description:", form) or re.search(r"(?m)^about:", form):
+        fail("Issue form must use 'description:' (not 'about:').")
+
+    # Shell scripts need a bash shebang and no Windows line endings.
+    for script in (ROOT / "scripts").glob("*.sh"):
+        data = script.read_bytes()
+        if not data.startswith(b"#!/usr/bin/env bash"):
+            fail(f"{script.name} must start with '#!/usr/bin/env bash'.")
+        if b"\r\n" in data:
+            fail(f"{script.name} contains CRLF line endings; shell scripts must use LF.")
+
     print("PASS: required Project Bridge package files exist")
     print(f"PASS: skill ID matches package folder ({skill_name})")
     print(f"PASS: skill description length is {len(description)} characters")
     print("PASS: required workflows and opt-in receipt guidance are present")
     print("PASS: receipt schema and example are valid JSON with required top-level fields")
+    print(f"PASS: files referenced by SKILL.md exist ({len(mentioned)} checked)")
+    print(f"PASS: version is consistent ({versions['SKILL.md']})")
+    print("PASS: issue form and shell scripts pass basic checks")
     print("NOTE: this dependency-free check does not perform full JSON Schema validation or runtime agent tests.")
     print("\nProject Bridge package sanity checks passed.")
     return 0

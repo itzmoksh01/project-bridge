@@ -11,16 +11,17 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-16a34a?style=for-the-badge" /></a>
-  <img alt="Version 0.2.0" src="https://img.shields.io/badge/version-0.2.0-7c3aed?style=for-the-badge" />
+  <img alt="Version 0.3.0" src="https://img.shields.io/badge/version-0.3.0-7c3aed?style=for-the-badge" />
   <img alt="Agent Skills format" src="https://img.shields.io/badge/format-Agent%20Skills-6366f1?style=for-the-badge" />
   <img alt="Claude Code target" src="https://img.shields.io/badge/target-Claude%20Code-d97706?style=for-the-badge" />
   <img alt="OpenCode target" src="https://img.shields.io/badge/target-OpenCode-0f172a?style=for-the-badge" />
-  <img alt="No runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-none-0891b2?style=for-the-badge" />
+  <img alt="Needs only git and bash" src="https://img.shields.io/badge/needs-git%20%2B%20bash-0891b2?style=for-the-badge" />
 </p>
 
 <p align="center">
   <a href="#the-problem">The problem</a> ·
   <a href="#the-approach">The approach</a> ·
+  <a href="#limit-safe-mode">Limit-safe mode</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#the-optional-handoff-receipt">Handoff receipt</a> ·
   <a href="#contribute">Contribute</a>
@@ -66,13 +67,56 @@ That gap can lead to:
 - **Secrets stay secret.** Never copy credential values into chat, logs, screenshots, or handoff files.
 - **User control comes first.** Ask before high-impact changes, external side effects, or creating a persistent handoff artifact.
 
+## Limit-safe mode
+
+Hit a usage limit mid-task? Chat history will not follow you to the next agent, and a rate-limited agent often cannot write a goodbye note. Limit-safe mode moves the handoff out of the chat and into **git and files**, which every agent can read.
+
+```mermaid
+flowchart LR
+    A["Main agent<br/>limit approaching"] --> B["preflight<br/>tag + handoff branch"]
+    B --> C["AGENTS.md<br/>safety rulebook"]
+    C --> D["Backup agent<br/>works on opencode-work"]
+    D --> E["AI_SWITCH_LOG.md<br/>what was done"]
+    E --> F["Main agent returns<br/>review + tests"]
+    F -->|"you approve"| G["Merge into base branch"]
+```
+
+| Piece | What it is | Why it matters |
+| --- | --- | --- |
+| **Checkpoint tag** | `checkpoint-before-<tool>-<date>` | One command returns you to the exact pre-switch state |
+| **Handoff branch** | `<tool>-work`, for example `opencode-work` | The backup agent never touches your base branch |
+| **Shared rulebook** | [`templates/AGENTS.md`](templates/AGENTS.md) | Locks every agent reads: no secrets, no installs, no live actions, no force git |
+| **Handoff log** | [`templates/AI_SWITCH_LOG.md`](templates/AI_SWITCH_LOG.md) | The next agent learns what was done, tested and left pending |
+
+Run these from your **project** folder, not the skill folder. On Windows use Git Bash.
+
+```bash
+bash ~/.claude/skills/project-bridge/scripts/preflight.sh opencode --dry-run   # preview, changes nothing
+bash ~/.claude/skills/project-bridge/scripts/preflight.sh opencode             # creates the tag and the opencode-work branch
+# ... the backup agent works, one task at a time ...
+bash ~/.claude/skills/project-bridge/scripts/review.sh opencode-work           # read-only review summary
+```
+
+The scripts never commit, stash, reset, clean or push, and `review.sh` prints only file names and counts, never secret values. Anything that changes your repository still needs your explicit approval.
+
+Copy-paste prompts for each step:
+
+| Step | Prompt |
+| --- | --- |
+| Backup agent reads the project (read-only) | [`prompts/01-onboard-readonly.md`](prompts/01-onboard-readonly.md) |
+| One task at a time | [`prompts/02-one-task.md`](prompts/02-one-task.md) |
+| End of session | [`prompts/03-handoff-entry.md`](prompts/03-handoff-entry.md) |
+| Main agent reviews and merges | [`prompts/04-review-and-merge.md`](prompts/04-review-and-merge.md) |
+
+More: [OpenCode Desktop setup](docs/OPENCODE-DESKTOP.md) · [Hinglish step-by-step guide](docs/GUIDE-HINGLISH.md)
+
 ## Quick start
 
-Project Bridge uses the open [Agent Skills format](https://agentskills.io/specification): a directory containing `SKILL.md` plus optional supporting files. It has no runtime dependencies and no installer script.
+Project Bridge uses the open [Agent Skills format](https://agentskills.io/specification): a directory containing `SKILL.md` plus optional supporting files. It needs no installer. The optional helper scripts need only `git` and `bash` (on Windows, Git Bash).
 
 ### Option A — One install for Claude Code + OpenCode (recommended)
 
-Current OpenCode documentation lists `~/.claude/skills` as a global compatibility source, so the same skill directory can be discovered by Claude Code and OpenCode. Replace `itzmoksh01` in the commands with the GitHub account that owns this repository. Verify discovery in your installed versions and check the active agent's skill permissions.
+Current OpenCode documentation lists `~/.claude/skills` as a global compatibility source, so the same skill directory can be discovered by Claude Code and OpenCode. Verify discovery in your installed versions and check the active agent's skill permissions.
 
 **Windows PowerShell**
 
@@ -113,7 +157,7 @@ git clone https://github.com/itzmoksh01/project-bridge.git "$HOME/.config/openco
 | Tool | Invocation |
 |---|---|
 | Claude Code | `/project-bridge` |
-| OpenCode | `@project-bridge` |
+| OpenCode | Ask the agent: "Use the project-bridge skill to ..." (it loads the skill with OpenCode's native `skill` tool) |
 
 Example request:
 
@@ -194,9 +238,10 @@ Python 3 is required only for the package validation script; it is not required 
 
 ```bash
 python scripts/validate_skill.py
+bash scripts/test_scripts.sh
 ```
 
-The validator checks package structure, naming/frontmatter basics, and the optional receipt JSON files. It does not prove behavioral safety or runtime compatibility. Use the manual test plan with a disposable test repository before claiming that an agent/version is tested.
+The validator checks package structure, naming/frontmatter basics, referenced files, version consistency, and the optional receipt JSON files. `test_scripts.sh` exercises the helper scripts in a throw-away git repository. It does not prove behavioral safety or runtime compatibility. Use the manual test plan with a disposable test repository before claiming that an agent/version is tested.
 
 ## Contribute
 

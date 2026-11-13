@@ -1,5 +1,5 @@
 name: Bug report
-about: Report a reproducible problem with the skill or its documentation
+description: Report a reproducible problem with the skill or its documentation
 labels: [bug]
 body:
   - type: markdown

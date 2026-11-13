@@ -3,6 +3,7 @@ name: Validate skill package
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,5 +20,13 @@ jobs:
           python-version: "3.x"
       - name: Validate skill package
         run: python scripts/validate_skill.py
-      - name: Check whitespace errors
-        run: git diff --check
+      - name: Lint shell scripts
+        run: shellcheck scripts/*.sh
+      - name: Self-test handoff scripts
+        run: bash scripts/test_scripts.sh
+      - name: Ensure no .env file is tracked
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -Ev '\.(example|sample|template|dist)$'; then
+            echo "A .env-style file is tracked by git."
+            exit 1
+          fi

@@ -1,11 +1,12 @@
 ---
 name: project-bridge
-description: Safely hand off an existing software project between Claude Code and OpenCode, preserve repository state and context, and resume work without silently overwriting local changes. Use when switching agents, recovering context, or preparing a project handoff.
+description: Safely hand off an existing software project between AI coding agents such as Claude Code and OpenCode, preserve repository state and context, and resume work without silently overwriting local changes. Use whenever the user mentions switching agents, a usage limit, rate limit, quota or limit reset, continuing the same project in OpenCode or another tool, recovering context, preparing or receiving a handoff, or reviewing and merging another agent's branch, even if they never say handoff.
 license: MIT
 compatibility: Agent Skills format. Initial documented targets are Claude Code and OpenCode; follow each host's current discovery paths and permissions.
 metadata:
   author: Project Bridge contributors
-  version: "0.2.0"
+  version: "0.3.0"
+  opencode/slash: "true"
 ---
 
 # Project Bridge
@@ -27,6 +28,8 @@ Use this workflow when the user asks to:
 - Prepare a handoff note for another developer or agent.
 - Resume work after context loss, a usage limit, an interruption, or a long break.
 - Check whether another agent's changes are safe to continue from.
+- Keep working after a usage limit, rate limit or quota is hit by moving to a backup agent on the same project (see Workflow F).
+- Review and merge the work a backup agent did once the main agent is available again (see Workflow G).
 
 Do not invoke this workflow for an unrelated greenfield project unless the user explicitly asks for a project handoff or continuity review.
 
@@ -47,7 +50,7 @@ A prompt or skill is guidance, not a security boundary. Follow the host agent's 
 
 ## Choose the correct workflow
 
-Identify the user's intent and use the smallest relevant workflow. If it is unclear whether they want an audit, a handoff note, or implementation work, ask one concise question before making changes.
+Identify the user's intent and use the smallest relevant workflow. Workflows A to E cover the audit, the outgoing and incoming handoff, scoped work and collisions. Use F to prepare a limit-safe switch and G to review a backup agent's branch when the main agent returns. If it is unclear whether they want an audit, a handoff note, or implementation work, ask one concise question before making changes.
 
 ### Workflow A — First-time project onboarding / read-only audit
 
@@ -107,6 +110,36 @@ Use only after the user has provided a concrete task and the current state is un
 8. Report changed files, behavior changed, checks run and results, checks not run, remaining risks, and the final Git state.
 9. Do not commit, push, deploy, publish, or trigger production/external side effects unless the user explicitly requests that exact action.
 
+### Workflow F — Limit-safe preparation (before the switch)
+
+Use when the user's current agent has hit, or is about to hit, a usage limit and they want to keep working in a backup agent, or when they ask to set the switch up in advance.
+
+Why this workflow exists: chat history does not transfer between agents, and an agent that is rate-limited often cannot write a final note. The handoff must therefore rest on **git state and files on disk**, not on the conversation.
+
+1. Explain the plan in two or three sentences: a checkpoint tag, a dedicated handoff branch, a shared rulebook (`AGENTS.md`) and a handoff log (`AI_SWITCH_LOG.md`). Say exactly what each one changes.
+2. From the **project root** (not the skill folder), preview with `bash <skill-dir>/scripts/preflight.sh <tool> --dry-run`. This is read-only. Show the user the result. `<skill-dir>` is the folder that contains this `SKILL.md`.
+3. Only with the user's explicit approval, run it without `--dry-run`. It creates one tag (`checkpoint-before-<tool>-<date>`) and one branch (`<tool>-work`) and changes no files. If preflight reports a problem (dirty working tree, a tracked `.env`, an existing branch), stop and explain it plainly. Do not work around it, and do not commit, stash or clean the user's changes for them.
+4. Offer the shared rulebook. With approval, create `AGENTS.md` and `AI_SWITCH_LOG.md` in the project root from `templates/AGENTS.md` and `templates/AI_SWITCH_LOG.md`.
+   - Never edit an existing `CLAUDE.md`.
+   - If `AGENTS.md` already exists, merge. Keep the user's rules, add any missing baseline locks, and never delete existing rules.
+   - Replace generic wording with verified specifics: the real test command, real secret file names, real live-action commands (deploy, publish, worker start). Keep every baseline lock.
+   - Commit only if the user explicitly asks, and only on the handoff branch.
+5. Tell the user how to start the backup agent: open the same folder, use Plan / read-only mode if available, and paste `prompts/01-onboard-readonly.md`. For OpenCode see `docs/OPENCODE-DESKTOP.md`.
+6. Confirm that this agent has stopped making changes.
+
+If the user is already inside the backup agent and the two files do not exist, they can copy `templates/AGENTS.md` and `templates/AI_SWITCH_LOG.md` into the project root by hand. Do not write the rulebook from memory.
+
+### Workflow G — Takeover review (the main agent returns)
+
+Use when the user's limit has reset and a backup agent has worked on a handoff branch.
+
+1. Do not start new work. Do not merge or push.
+2. From the project root, run `bash <skill-dir>/scripts/review.sh <tool>-work`. It is read-only. It lists the commits, the diff summary, whether the base branch has moved, which sensitive files were touched, and which files contain secret-like added lines (counts only, it never prints the values).
+3. Follow `prompts/04-review-and-merge.md`: read `AGENTS.md` and `AI_SWITCH_LOG.md`, review every changed file, run the full test suite on the handoff branch, and compare the log's claims with the code.
+4. Report what is good, what is wrong, what is risky, and a merge recommendation. Then wait.
+5. Only after the user explicitly says to merge: fix the issues, merge with `git merge --no-ff <tool>-work`, re-run the tests, update documentation only if the architecture changed, and add a closing entry to `AI_SWITCH_LOG.md`. Never push without a separate explicit request.
+6. For the next switch, start again from Workflow F with a fresh branch.
+
 ### Workflow E — Detect a collision or unsafe handoff
 
 If two agents may be editing the same files, a process is still running, Git status changes unexpectedly, or the handoff note conflicts with the filesystem:
@@ -137,6 +170,8 @@ Always tailor this explanation to the actual setup; do not present it as a guara
 ## Handoff note and optional portable receipt
 
 Provide the handoff in the conversation by default. Do not create a file merely because a handoff is taking place.
+
+**Exception to recommend, never to force:** if the user says a usage limit is hit or imminent, the next agent will not see this conversation. Say so, and recommend a persistent note such as `AI_SWITCH_LOG.md` (Workflow F). Create it only with the user's approval.
 
 - If the user explicitly asks for a persistent human-readable note, use `templates/HANDOFF.md` as the structure and ask for or confirm the destination path before writing when the path is not specified.
 - A machine-readable **Portable Handoff Receipt** is an optional add-on, not a required step. Create one only when the user explicitly requests or approves it. Use `templates/HANDOFF-RECEIPT.schema.json` and `templates/HANDOFF-RECEIPT.example.json` as the format reference.
@@ -173,6 +208,15 @@ For a handoff or audit, use these headings where applicable:
 Keep reports actionable and proportionate. Never claim that a project is "100% safe", "fully preserved", or "guaranteed not to break" merely because this skill was followed.
 
 
+## Limits of this skill
+
+- Chat history and hidden agent memory never transfer. Only files and git do.
+- This skill covers **development** handoff. It does not make a running application fall back to a different AI model at runtime. That is a feature of the application itself.
+- It cannot guarantee that a free or smaller model writes correct code. The locks in `templates/AGENTS.md`, the one-task-at-a-time rule, the tests and the takeover review exist for that reason.
+- The helper scripts need `git` and `bash`. On Windows use Git Bash, which comes with Git for Windows.
+
 ## Initial platform focus
 
 Project Bridge is initially documented for **Claude Code** and **OpenCode**. Do not claim runtime compatibility for a particular app version until the manual tests in `docs/MANUAL-TEST-PLAN.md` have been completed and recorded. Other Agent Skills-compatible tools are future compatibility targets; do not imply they have been tested.
+
+In OpenCode, skills are loaded by the agent through its native `skill` tool, using the exact skill ID, subject to the active agent's `skill` permissions. The user asks the agent to use `project-bridge`; there is no documented `@` mention for skills.

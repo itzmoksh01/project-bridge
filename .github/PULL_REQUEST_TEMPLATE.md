@@ -5,6 +5,7 @@
 ## How was it tested?
 
 - [ ] `python scripts/validate_skill.py`
+- [ ] `bash scripts/test_scripts.sh` (if scripts changed)
 - [ ] Documentation reviewed
 - [ ] Tested in a target agent (list tool/version below), or compatibility is clearly marked unverified
 

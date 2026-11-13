@@ -23,6 +23,8 @@ Run:
 
 ```bash
 python scripts/validate_skill.py
+bash scripts/test_scripts.sh
+shellcheck scripts/*.sh   # if shellcheck is installed
 ```
 
 Review the complete diff before submitting:
